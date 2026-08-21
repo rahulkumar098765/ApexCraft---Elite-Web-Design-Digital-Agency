@@ -10,10 +10,12 @@ import {
   CheckCircle2, 
   Sparkles, 
   Globe2,
-  ShieldCheck
+  ShieldCheck,
+  Loader2
 } from 'lucide-react';
 import { PageType } from '../types';
 import confetti from 'canvas-confetti';
+import { submitLeadToSupabase } from '../lib/supabase';
 
 interface ContactSectionProps {
   isDarkMode: boolean;
@@ -21,6 +23,7 @@ interface ContactSectionProps {
 
 export const ContactSection: React.FC<ContactSectionProps> = ({ isDarkMode }) => {
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -33,14 +36,34 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ isDarkMode }) =>
     message: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormSubmitted(true);
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 }
-    });
+    setIsSubmitting(true);
+
+    try {
+      await submitLeadToSupabase({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        business_name: formData.businessName,
+        industry: formData.industry,
+        budget: formData.budget,
+        timeline: formData.timeline,
+        website_url: formData.currentWebsite,
+        message: formData.message,
+        form_type: 'contact',
+      });
+    } catch (err) {
+      console.error('Submission error:', err);
+    } finally {
+      setIsSubmitting(false);
+      setFormSubmitted(true);
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    }
   };
 
   const handleWhatsAppDirect = () => {
@@ -241,6 +264,23 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ isDarkMode }) =>
 
                     <div>
                       <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
+                        Phone Number (Optional)
+                      </label>
+                      <input
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        placeholder="+1 (555) 234-5678"
+                        className={`w-full p-3.5 rounded-xl text-sm border focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+                          isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
                         Industry / Category *
                       </label>
                       <select
@@ -263,6 +303,21 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ isDarkMode }) =>
                         <option value="Corporate / Legal">Law Firm / Accounting / Corporate</option>
                         <option value="SaaS & Startup">SaaS & Tech Startup</option>
                       </select>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
+                        Current Website URL (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.currentWebsite}
+                        onChange={(e) => setFormData({ ...formData, currentWebsite: e.target.value })}
+                        placeholder="e.g. www.mycurrentwebsite.com"
+                        className={`w-full p-3.5 rounded-xl text-sm border focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+                          isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                        }`}
+                      />
                     </div>
                   </div>
 
@@ -319,10 +374,20 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ isDarkMode }) =>
 
                   <button
                     type="submit"
-                    className="w-full py-4 px-6 rounded-2xl text-sm font-bold uppercase tracking-wider text-white bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-500 shadow-xl shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+                    disabled={isSubmitting}
+                    className="w-full py-4 px-6 rounded-2xl text-sm font-bold uppercase tracking-wider text-white bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-500 shadow-xl shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 disabled:pointer-events-none transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <Send className="w-4 h-4" />
-                    <span>Send Project Inquiry (Guaranteed 12-Hr Response)</span>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>Connecting & Submitting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        <span>Send Project Inquiry (Guaranteed 12-Hr Response)</span>
+                      </>
+                    )}
                   </button>
 
                   <div className="flex items-center justify-center gap-4 text-[11px] text-slate-400">

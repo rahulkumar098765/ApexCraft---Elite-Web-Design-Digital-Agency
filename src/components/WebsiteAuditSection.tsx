@@ -11,10 +11,13 @@ import {
   Download,
   PhoneCall,
   Activity,
-  ShieldCheck
+  ShieldCheck,
+  Mail,
+  Loader2
 } from 'lucide-react';
 import { AuditResult, PageType } from '../types';
 import confetti from 'canvas-confetti';
+import { submitLeadToSupabase } from '../lib/supabase';
 
 interface WebsiteAuditSectionProps {
   setActivePage: (page: PageType) => void;
@@ -26,16 +29,35 @@ export const WebsiteAuditSection: React.FC<WebsiteAuditSectionProps> = ({
   isDarkMode,
 }) => {
   const [inputUrl, setInputUrl] = useState('');
+  const [inputEmail, setInputEmail] = useState('');
   const [inputIndustry, setInputIndustry] = useState('Dental Clinic');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
 
-  const handleRunAudit = (e: React.FormEvent) => {
+  const handleRunAudit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputUrl) return;
 
     setIsAnalyzing(true);
     setAuditResult(null);
+
+    // Save lead to Supabase if email or website is provided
+    try {
+      await submitLeadToSupabase({
+        name: 'Audit Requester',
+        email: inputEmail || 'unspecified@audit-lead.com',
+        website_url: inputUrl.startsWith('http') ? inputUrl : `https://${inputUrl}`,
+        industry: inputIndustry,
+        message: `Requested AI CRO & Core Web Vitals Audit for ${inputUrl}`,
+        form_type: 'website_audit',
+        metadata: {
+          scanned_url: inputUrl,
+          industry: inputIndustry
+        }
+      });
+    } catch (err) {
+      console.warn('Audit lead logging notice:', err);
+    }
 
     // Simulate comprehensive AI analysis
     setTimeout(() => {
@@ -119,12 +141,12 @@ export const WebsiteAuditSection: React.FC<WebsiteAuditSectionProps> = ({
         }`}>
           <form onSubmit={handleRunAudit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-              <div className="sm:col-span-7 relative">
+              <div className="sm:col-span-4 relative">
                 <input
                   type="text"
                   value={inputUrl}
                   onChange={(e) => setInputUrl(e.target.value)}
-                  placeholder="e.g. www.yourclinicorbusiness.com"
+                  placeholder="e.g. www.yourbusiness.com"
                   required
                   className={`w-full py-3.5 px-4 rounded-xl text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono ${
                     isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
@@ -132,7 +154,19 @@ export const WebsiteAuditSection: React.FC<WebsiteAuditSectionProps> = ({
                 />
               </div>
 
-              <div className="sm:col-span-5">
+              <div className="sm:col-span-4 relative">
+                <input
+                  type="email"
+                  value={inputEmail}
+                  onChange={(e) => setInputEmail(e.target.value)}
+                  placeholder="Your email (optional)"
+                  className={`w-full py-3.5 px-4 rounded-xl text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                  }`}
+                />
+              </div>
+
+              <div className="sm:col-span-4">
                 <select
                   value={inputIndustry}
                   onChange={(e) => setInputIndustry(e.target.value)}

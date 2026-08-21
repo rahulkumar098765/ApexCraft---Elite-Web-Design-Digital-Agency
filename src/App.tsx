@@ -17,14 +17,16 @@ import { FaqSection } from './components/FaqSection';
 import { ContactSection } from './components/ContactSection';
 import { FloatingWidgets } from './components/FloatingWidgets';
 import { Footer } from './components/Footer';
-import { X, Send, CheckCircle2, ShieldCheck, Sparkles } from 'lucide-react';
+import { X, Send, CheckCircle2, ShieldCheck, Sparkles, Loader2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { submitLeadToSupabase } from './lib/supabase';
 
 export default function App() {
   const [activePage, setActivePage] = useState<PageType>('home');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
   const [isQuickQuoteOpen, setIsQuickQuoteOpen] = useState<boolean>(false);
   const [quickQuoteSubmitted, setQuickQuoteSubmitted] = useState<boolean>(false);
+  const [isSubmittingQuote, setIsSubmittingQuote] = useState<boolean>(false);
   const [quickQuoteData, setQuickQuoteData] = useState({
     name: '',
     email: '',
@@ -36,14 +38,29 @@ export default function App() {
     setIsDarkMode((prev) => !prev);
   };
 
-  const handleQuickQuoteSubmit = (e: React.FormEvent) => {
+  const handleQuickQuoteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setQuickQuoteSubmitted(true);
-    confetti({
-      particleCount: 80,
-      spread: 60,
-      origin: { y: 0.6 }
-    });
+    setIsSubmittingQuote(true);
+
+    try {
+      await submitLeadToSupabase({
+        name: quickQuoteData.name,
+        email: quickQuoteData.email,
+        industry: quickQuoteData.industry,
+        budget: quickQuoteData.budget,
+        form_type: 'quick_quote',
+      });
+    } catch (err) {
+      console.error('Error submitting quick quote:', err);
+    } finally {
+      setIsSubmittingQuote(false);
+      setQuickQuoteSubmitted(true);
+      confetti({
+        particleCount: 80,
+        spread: 60,
+        origin: { y: 0.6 }
+      });
+    }
   };
 
   return (
@@ -312,10 +329,20 @@ export default function App() {
 
                   <button
                     type="submit"
-                    className="w-full py-3.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-blue-600 to-cyan-500 shadow-md flex items-center justify-center gap-2 mt-4"
+                    disabled={isSubmittingQuote}
+                    className="w-full py-3.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-blue-600 to-cyan-500 shadow-md flex items-center justify-center gap-2 mt-4 hover:opacity-95 active:scale-[0.99] disabled:opacity-70 disabled:pointer-events-none transition-all cursor-pointer"
                   >
-                    <Send className="w-4 h-4" />
-                    <span>Get Guaranteed Estimate</span>
+                    {isSubmittingQuote ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Sending Request...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        <span>Get Guaranteed Estimate</span>
+                      </>
+                    )}
                   </button>
 
                   <div className="flex items-center justify-center gap-2 text-[10px] text-slate-400 pt-1">
