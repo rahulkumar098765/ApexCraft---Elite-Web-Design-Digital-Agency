@@ -1,20 +1,17 @@
 import React, { useState } from 'react';
 import { 
   PhoneCall, 
-  MessageSquare, 
   Mail, 
   MapPin, 
-  Clock, 
   Send, 
-  Calendar, 
   CheckCircle2, 
-  Sparkles, 
   Globe2,
   ShieldCheck,
   Loader2
 } from 'lucide-react';
-import { PageType } from '../types';
 import confetti from 'canvas-confetti';
+
+const SCRIPT_URL = import.meta.env.VITE_APPS_SCRIPT_URL || "https://script.google.com/macros/s/AKfycbzkftxHx3okF_X2LhN_BAfnUj8jro7dO91yXeYC3xBOKAwJ2LeAKa8LlS7CqTuW9kI/exec";
 
 interface ContactSectionProps {
   isDarkMode: boolean;
@@ -39,23 +36,52 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ isDarkMode }) =>
     e.preventDefault();
     setIsSubmitting(true);
 
+    const payload = {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      businessName: formData.businessName,
+      business_name: formData.businessName,
+      industry: formData.industry,
+      budget: formData.budget,
+      timeline: formData.timeline,
+      currentWebsite: formData.currentWebsite,
+      current_website: formData.currentWebsite,
+      website_url: formData.currentWebsite,
+      message: formData.message,
+      form_type: 'contact',
+      timestamp: new Date().toISOString(),
+      date: new Date().toLocaleString(),
+      Name: formData.name,
+      Email: formData.email,
+      Phone: formData.phone,
+      BusinessName: formData.businessName,
+      Industry: formData.industry,
+      Budget: formData.budget,
+      Timeline: formData.timeline,
+      CurrentWebsite: formData.currentWebsite,
+      Message: formData.message,
+      Date: new Date().toLocaleString(),
+    };
+
     try {
-      const response = await fetch("https://script.google.com/macros/s/AKfycbzkftxHx3okF_X2LhN_BAfnUj8jro7dO91yXeYC3xBOKAwJ2LeAKa8LlS7CqTuW9kI/exec", {
-        method: "POST",
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          businessName: formData.businessName,
-          industry: formData.industry,
-          budget: formData.budget,
-          timeline: formData.timeline,
-          currentWebsite: formData.currentWebsite,
-          message: formData.message,
-          form_type: 'contact',
-          timestamp: new Date().toISOString(),
-        }),
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8',
+        },
+        body: JSON.stringify(payload),
       });
+
+      // Save to localStorage as a reliable backup
+      try {
+        const localLeads = JSON.parse(localStorage.getItem('apexcraft_leads') || '[]');
+        localLeads.unshift(payload);
+        localStorage.setItem('apexcraft_leads', JSON.stringify(localLeads.slice(0, 100)));
+      } catch {
+        // Safe fallback
+      }
     } catch (err) {
       console.error('Submission error:', err);
     } finally {
@@ -67,13 +93,6 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ isDarkMode }) =>
         origin: { y: 0.6 }
       });
     }
-  };
-
-  const handleWhatsAppDirect = () => {
-    const text = encodeURIComponent(
-      `Hello Alex! I am interested in building a high-converting website for my business (${formData.businessName || 'Business'}). My budget is ${formData.budget}. Let's discuss!`
-    );
-    window.open(`https://wa.me/18005552739?text=${text}`, '_blank');
   };
 
   return (
@@ -98,7 +117,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ isDarkMode }) =>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          {/* Left: Contact Info & Timezone Clock & WhatsApp Card (5 Cols) */}
+          {/* Left: Contact Info & Timezone Clock (5 Cols) */}
           <div className="lg:col-span-5 space-y-6">
             {/* Direct Contact Methods */}
             <div className={`p-8 rounded-3xl border ${
@@ -383,7 +402,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ isDarkMode }) =>
                     {isSubmitting ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>Connecting & Submitting...</span>
+                        <span>Sending to Google Sheet...</span>
                       </>
                     ) : (
                       <>
