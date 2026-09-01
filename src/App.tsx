@@ -19,7 +19,7 @@ import { FloatingWidgets } from './components/FloatingWidgets';
 import { Footer } from './components/Footer';
 import { X, Send, CheckCircle2, ShieldCheck, Sparkles, Loader2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { submitLeadToSupabase } from './lib/supabase';
+import { submitLeadToAppsScript } from './lib/leadService';
 
 export default function App() {
   const [activePage, setActivePage] = useState<PageType>('home');
@@ -43,7 +43,7 @@ export default function App() {
     setIsSubmittingQuote(true);
 
     try {
-      await submitLeadToSupabase({
+      await submitLeadToAppsScript({
         name: quickQuoteData.name,
         email: quickQuoteData.email,
         industry: quickQuoteData.industry,

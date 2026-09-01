@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { AuditResult, PageType } from '../types';
 import confetti from 'canvas-confetti';
-import { submitLeadToSupabase } from '../lib/supabase';
+import { submitLeadToAppsScript } from '../lib/leadService';
 
 interface WebsiteAuditSectionProps {
   setActivePage: (page: PageType) => void;
@@ -41,12 +41,13 @@ export const WebsiteAuditSection: React.FC<WebsiteAuditSectionProps> = ({
     setIsAnalyzing(true);
     setAuditResult(null);
 
-    // Save lead to Supabase if email or website is provided
+    // Save lead via Google Apps Script POST if email or website is provided
     try {
-      await submitLeadToSupabase({
+      await submitLeadToAppsScript({
         name: 'Audit Requester',
         email: inputEmail || 'unspecified@audit-lead.com',
         website_url: inputUrl.startsWith('http') ? inputUrl : `https://${inputUrl}`,
+        currentWebsite: inputUrl.startsWith('http') ? inputUrl : `https://${inputUrl}`,
         industry: inputIndustry,
         message: `Requested AI CRO & Core Web Vitals Audit for ${inputUrl}`,
         form_type: 'website_audit',
