@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { PageType } from '../types';
 import confetti from 'canvas-confetti';
-import { submitLeadToSupabase } from '../lib/supabase';
 
 interface ContactSectionProps {
   isDarkMode: boolean;
@@ -41,17 +40,21 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ isDarkMode }) =>
     setIsSubmitting(true);
 
     try {
-      await submitLeadToSupabase({
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        business_name: formData.businessName,
-        industry: formData.industry,
-        budget: formData.budget,
-        timeline: formData.timeline,
-        website_url: formData.currentWebsite,
-        message: formData.message,
-        form_type: 'contact',
+      const response = await fetch("https://script.google.com/macros/s/AKfycbzkftxHx3okF_X2LhN_BAfnUj8jro7dO91yXeYC3xBOKAwJ2LeAKa8LlS7CqTuW9kI/exec", {
+        method: "POST",
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          businessName: formData.businessName,
+          industry: formData.industry,
+          budget: formData.budget,
+          timeline: formData.timeline,
+          currentWebsite: formData.currentWebsite,
+          message: formData.message,
+          form_type: 'contact',
+          timestamp: new Date().toISOString(),
+        }),
       });
     } catch (err) {
       console.error('Submission error:', err);
