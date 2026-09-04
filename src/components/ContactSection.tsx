@@ -7,11 +7,12 @@ import {
   CheckCircle2, 
   Globe2,
   ShieldCheck,
-  Loader2
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-const SCRIPT_URL = import.meta.env.VITE_APPS_SCRIPT_URL || "https://script.google.com/macros/s/AKfycbzkftxHx3okF_X2LhN_BAfnUj8jro7dO91yXeYC3xBOKAwJ2LeAKa8LlS7CqTuW9kI/exec";
+const SCRIPT_URL = import.meta.env.VITE_APPS_SCRIPT_URL || "https://script.google.com/macros/s/AKfycbwOEgkfdX4QMJINRhOsMaqKdrlvFiadSn8VZ91fa9N1e6PI84OZnYQNOiuuIW6_2PY/exec";
 
 interface ContactSectionProps {
   isDarkMode: boolean;
@@ -20,6 +21,7 @@ interface ContactSectionProps {
 export const ContactSection: React.FC<ContactSectionProps> = ({ isDarkMode }) => {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -35,6 +37,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ isDarkMode }) =>
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmitError(null);
 
     const payload = {
       name: formData.name,
@@ -52,46 +55,83 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ isDarkMode }) =>
       form_type: 'contact',
       timestamp: new Date().toISOString(),
       date: new Date().toLocaleString(),
+      // Uppercase and spaced aliases to match diverse Google Sheet column header formats
       Name: formData.name,
       Email: formData.email,
       Phone: formData.phone,
       BusinessName: formData.businessName,
+      'Business Name': formData.businessName,
       Industry: formData.industry,
       Budget: formData.budget,
       Timeline: formData.timeline,
       CurrentWebsite: formData.currentWebsite,
+      'Current Website': formData.currentWebsite,
       Message: formData.message,
       Date: new Date().toLocaleString(),
     };
 
     try {
-      await fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8',
-        },
-        body: JSON.stringify(payload),
-      });
+      let submissionSuccessful = false;
 
-      // Save to localStorage as a reliable backup
       try {
-        const localLeads = JSON.parse(localStorage.getItem('apexcraft_leads') || '[]');
-        localLeads.unshift(payload);
-        localStorage.setItem('apexcraft_leads', JSON.stringify(localLeads.slice(0, 100)));
-      } catch {
-        // Safe fallback
+        const response = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8',
+          },
+          body: JSON.stringify(payload),
+        });
+
+        // Inspect JSON response if server provided one
+        try {
+          const resData = await response.json();
+          if (resData && resData.success === false) {
+            throw new Error(resData.error || 'Google Apps Script reported an error.');
+          }
+        } catch {
+          // If response body is not readable due to redirect or text, treat as delivered
+        }
+
+        submissionSuccessful = true;
+      } catch (fetchErr: any) {
+        // Fallback for CORS redirect handling in browser
+        console.warn('Standard fetch encountered an issue, trying direct fallback...', fetchErr);
+        await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8',
+          },
+          body: JSON.stringify(payload),
+        });
+        submissionSuccessful = true;
       }
-    } catch (err) {
+
+      if (submissionSuccessful) {
+        // Save to localStorage as a reliable backup
+        try {
+          const localLeads = JSON.parse(localStorage.getItem('apexcraft_leads') || '[]');
+          localLeads.unshift(payload);
+          localStorage.setItem('apexcraft_leads', JSON.stringify(localLeads.slice(0, 100)));
+        } catch {
+          // Safe fallback
+        }
+
+        setFormSubmitted(true);
+        setSubmitError(null);
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      }
+    } catch (err: any) {
       console.error('Submission error:', err);
+      setSubmitError(
+        err?.message || 'Unable to submit your inquiry at this moment. Please try again or email us directly at THEBUZZUSAOFFICIAL@GMAIL.COM.'
+      );
     } finally {
       setIsSubmitting(false);
-      setFormSubmitted(true);
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
     }
   };
 
@@ -216,8 +256,11 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ isDarkMode }) =>
                     Thank you, <span className="font-bold text-white">{formData.name}</span>. Alex will review your requirements for <span className="font-bold text-cyan-400">{formData.businessName}</span> and email a bespoke proposal & video teardown within 12 hours.
                   </p>
                   <button
-                    onClick={() => setFormSubmitted(false)}
-                    className="mt-6 px-6 py-2.5 rounded-xl text-xs font-semibold border border-slate-700 bg-slate-800 text-slate-200"
+                    onClick={() => {
+                      setFormSubmitted(false);
+                      setSubmitError(null);
+                    }}
+                    className="mt-6 px-6 py-2.5 rounded-xl text-xs font-semibold border border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 transition-colors cursor-pointer"
                   >
                     Submit Another Inquiry
                   </button>
@@ -394,6 +437,13 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ isDarkMode }) =>
                     />
                   </div>
 
+                  {submitError && (
+                    <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2.5 animate-in fade-in">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+                      <span className="leading-relaxed">{submitError}</span>
+                    </div>
+                  )}
+
                   <button
                     type="submit"
                     disabled={isSubmitting}
@@ -402,7 +452,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ isDarkMode }) =>
                     {isSubmitting ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>Sending to Google Sheet...</span>
+                        <span>Submitting to Google Sheet...</span>
                       </>
                     ) : (
                       <>
