@@ -13,6 +13,7 @@ import {
   GraduationCap
 } from 'lucide-react';
 import { PageType } from '../types';
+import founderPortraitImg from '../assets/images/founder_portrait_1788606413453.jpg';
 
 interface AboutSectionProps {
   setActivePage: (page: PageType) => void;
@@ -54,9 +55,10 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
             }`}>
               <div className="relative rounded-2xl overflow-hidden aspect-[4/5] bg-slate-950">
                 <img
-                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800&auto=format&fit=crop"
-                  alt="Alex Rivera - Lead Web Architect"
-                  className="w-full h-full object-cover grayscale-[20%] hover:grayscale-0 transition-all duration-500"
+                  src={founderPortraitImg}
+                  alt="Alex Rivera - Lead Web Architect & Founder"
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover transition-all duration-500 hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
                 <div className="absolute bottom-4 left-4 right-4">
