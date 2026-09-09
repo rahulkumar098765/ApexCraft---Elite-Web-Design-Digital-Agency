@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { PageType } from '../types';
 import founderPortraitImg from '../assets/images/founder_portrait_1788606413453.jpg';
+import founderPersonalBrandImg from '../assets/images/founder_personal_brand.jpg';
 
 interface AboutSectionProps {
   setActivePage: (page: PageType) => void;
@@ -43,6 +44,8 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
   setActivePage,
   isDarkMode,
 }) => {
+  const [imageMode, setImageMode] = React.useState<'brand' | 'portrait'>('brand');
+
   return (
     <section id="about-section" className="py-20 md:py-28 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -50,26 +53,73 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-20">
           {/* Profile Photo & Credentials Card */}
           <div className="lg:col-span-5 relative">
-            <div className={`p-4 rounded-3xl border shadow-2xl relative overflow-hidden transition-colors ${
-              isDarkMode ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200'
+            <div className={`p-5 rounded-3xl border shadow-2xl relative overflow-hidden transition-colors ${
+              isDarkMode ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'
             }`}>
-              <div className="relative rounded-2xl overflow-hidden aspect-[4/5] bg-slate-950">
-                <img
-                  src={founderPortraitImg}
-                  alt="Alex Rivera - Lead Web Architect & Founder"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover transition-all duration-500 hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
+              {/* Image View Toggle Controls */}
+              <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-slate-800/60">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  Founder Profile Visual
+                </span>
+                <div className="flex items-center gap-1 p-0.5 rounded-lg bg-slate-950/70 border border-slate-800">
+                  <button
+                    onClick={() => setImageMode('brand')}
+                    className={`px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider uppercase transition-all ${
+                      imageMode === 'brand'
+                        ? 'bg-amber-500 text-slate-950 shadow'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Personal Brand
+                  </button>
+                  <button
+                    onClick={() => setImageMode('portrait')}
+                    className={`px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider uppercase transition-all ${
+                      imageMode === 'portrait'
+                        ? 'bg-blue-600 text-white shadow'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Executive Portrait
+                  </button>
+                </div>
+              </div>
+
+              {/* Responsive Image Container */}
+              <div className="relative rounded-2xl overflow-hidden aspect-[4/5] bg-slate-950 flex items-center justify-center group shadow-inner border border-slate-800/80">
+                {imageMode === 'brand' ? (
+                  <img
+                    src={founderPersonalBrandImg}
+                    alt="ApexCraft Studio Founder Personal Brand"
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-contain p-4 rounded-2xl transition-all duration-500 group-hover:scale-105"
+                  />
+                ) : (
+                  <img
+                    src={founderPortraitImg}
+                    alt="Alex Rivera - Lead Web Architect & Founder"
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/30 to-transparent pointer-events-none" />
+                
+                {/* Overlay Card Details */}
                 <div className="absolute bottom-4 left-4 right-4">
-                  <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-600 text-white shadow-md">
-                    Lead Web Architect & Founder
-                  </span>
-                  <h3 className="font-heading font-black text-2xl text-white mt-1">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md">
+                      Owner & Principal Architect
+                    </span>
+                    <span className="flex h-2 w-2 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                  </div>
+                  <h3 className="font-heading font-black text-2xl text-white">
                     Alex Rivera
                   </h3>
                   <p className="text-xs text-slate-300">
-                    Bespoke Web Developer & CRO Specialist
+                    Bespoke Web Developer & CRO Specialist • ApexCraft Studio
                   </p>
                 </div>
               </div>
@@ -77,7 +127,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
               {/* Verified Badges */}
               <div className="mt-4 grid grid-cols-2 gap-2 text-center text-xs">
                 <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800">
-                  <div className="font-heading font-bold text-base text-blue-400">9+ Years</div>
+                  <div className="font-heading font-bold text-base text-amber-400">9+ Years</div>
                   <div className="text-[10px] text-slate-400">Engineering Craft</div>
                 </div>
                 <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800">
